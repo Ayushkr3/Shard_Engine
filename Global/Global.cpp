@@ -180,6 +180,13 @@ const std::type_info& TransformStruct::GetPropertyType() {
 	return typeid(TransformStruct);
 }
 
+std::unordered_map<std::string, ObjectProperties*> Objects::GetPropertiesQuick() {
+	std::unordered_map<std::string, ObjectProperties*> hashed;
+	for (auto& it : (*GetProperties())) {
+		hashed[it->GetPropertyClassName()] = it;
+	}
+	return hashed;
+}
 
 HANDLE IPC::hMapFile;
 LPVOID IPC::ptrToMem;

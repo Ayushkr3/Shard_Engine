@@ -260,6 +260,34 @@ void NVPhysx::RigidBody::UpdatePhysics() {
 		}
 	}
 }
+std::string NVPhysx::RigidBody::Serialize() {
+	return Serialization::SerializeProperty(*this);
+}
+void NVPhysx::RigidBody::DeSerialize(std::string block, void* FixPropFunctor, void* Scene) {
+	std::istringstream iss(block);
+	std::string line;
+	std::getline(iss, line);
+	while (std::getline(iss, line)) {
+		size_t off = line.find(":");
+		std::string type = line.substr(0, off);
+		switch (std::stoi(type))
+		{
+		case 0:
+			break;
+		case 1:
+			break;
+		case 2:
+			off = line.find(":", off + 1);
+			std::string enclosed = line.substr(off + 1, line.size() - 2);
+			if (enclosed.front() == '<' && enclosed.back() == '>') {
+				//call functor with this
+				void(*func)(void*, void*) = (void(*)(void*, void*))(FixPropFunctor);
+				func(Scene, (void*)&Serialization::CallerObject(associatedObj->Id, (void*)&enclosed));
+			}
+			break;
+		}
+	}
+}
 
 //-------------------------------------------------------------------------------//
 //---------------------------------Factroy functions----------------------------//

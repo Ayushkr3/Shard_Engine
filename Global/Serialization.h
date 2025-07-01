@@ -5,10 +5,23 @@
 #include <any>
 struct Serial {
 	void* ObjectPtr;
-	const std::type_info& id;
 	const char* name;
-	Serial(const char* name, void* ObjectPtr, const std::type_info& id) :ObjectPtr(ObjectPtr), id(id), name(name) {};
+	const std::type_info& type;
+	bool isPointer;
+	Serial(const char* name, void* ObjectPtr,const std::type_info& type,bool isPointer):ObjectPtr(ObjectPtr), name(name),type(type),isPointer(isPointer) {};
 };
+#define REFLECT_BEGIN(CLASS_NAME) \
+    auto reflect() { \
+        using ThisClass = CLASS_NAME; \
+        return std::tuple(
+#define REFLECT_PTR(VAR) \
+    std::make_pair(Serial(#VAR, (void*)VAR, typeid(VAR), true), VAR)
+#define REFLECT_VAR(VAR) \
+    std::make_pair(Serial(#VAR, (void*)&VAR, typeid(VAR), false), VAR)
+
+#define REFLECT_END() \
+        ); \
+    }
 namespace Serialization {
 	struct PropertyBlock {
 		std::string PropertyNames;
@@ -22,6 +35,12 @@ namespace Serialization {
 		std::vector<PropertyBlock> propBlocks;
 		ObjectBlocks(short Id,std::string classname,std::string blockBuffer):ClassName(classname),blockBuffer(blockBuffer),Id(Id){}
 	};
+	struct CallerObject {
+		int callerId;
+		void* Data;
+
+		CallerObject(int callerId, void* Data) :callerId(callerId), Data(Data) {};
+	};
 	template <typename T>
 	std::string getVal(T x) {
 		if constexpr (std::is_same_v<T, std::string>) {
@@ -29,6 +48,13 @@ namespace Serialization {
 		}
 		else if constexpr (std::is_arithmetic_v<T>) {
 			return std::to_string(x);
+		}
+		else if constexpr (std::is_pointer_v<T>) {
+		ObjectProperties* o = dynamic_cast<ObjectProperties*>(x);
+			if (o) {
+				return "<" + std::to_string(o->associatedObj->Id) +":"+o->GetPropertyClassName()+ ">";
+			}
+			return "";
 		}
 		else {
 			return "<unsupported>";
@@ -41,7 +67,14 @@ namespace Serialization {
 		std::ostringstream bytes;
 		int i = 0;
 		std::apply([&](auto&&... pairs) {
-			((s += std::to_string(i++) + ":" + pairs.first.name + ":" + getVal(pairs.second) + "\n"), ...);
+			(([&] {
+				std::string val = getVal(pairs.second);
+				if (!val.empty())
+					s += std::to_string(i++) + ":" + pairs.first.name + ":" + val + "\n";
+				else
+					CONSOLE_PRINT("Bad pointer");
+			}()), ...);
+			
 		}, x);
 		s = s + "{/" + prop.GetPropertyClassName() + "}" + "\n";
 		bytes << std::setw(5) << std::setfill('0') << (s.size());
@@ -62,7 +95,7 @@ namespace Serialization {
 		return s;
 	}
 	template <typename T>
-	void DeSerializeObject(T*& Obj, PropertyBlock segment) {
+	void DeSerializeObject(T*& Obj, PropertyBlock segment,void*FixPropFunctor,void* Scene) {
 		if (HotReloading::PropertiesPool == nullptr) {
 			auto ctx = ImGui::GetCurrentContext();
 			HotReloading::GetInstance();
@@ -71,8 +104,9 @@ namespace Serialization {
 		auto functorIT = HotReloading::PropertiesPool->find(segment.PropertyNames);
 		if (functorIT != HotReloading::PropertiesPool->end()) {
 			ObjectProperties* prop = functorIT->second(Obj);
+			
 			//Pushing into list done by individual property
-			prop->DeSerialize(segment.PropertyBuffer);
+			prop->DeSerialize(segment.PropertyBuffer,FixPropFunctor,Scene);
 		}
 		
 	}

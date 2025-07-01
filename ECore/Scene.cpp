@@ -6,6 +6,7 @@
 short Scene::currentOBJID = 10;
 using namespace physx;
 std::vector<short> Scene::globalCurrentOBJID = {};
+std::vector<Serialization::ObjectBlocks>* Scene::ObjectsBlocks=nullptr;
 Scene::Scene(Microsoft::WRL::ComPtr<ID3D11Device> pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> pContext)
 	:cam(pDevice), pContext(pContext), pDevice(pDevice)
 
@@ -141,6 +142,118 @@ std::vector<Prefab*>::iterator Scene::LookUp(Prefab* Tri, std::vector<Prefab*>& 
 	}
 	return vec.end();
 }
+//kill me
+// way to fragile
+void Scene::SceneThunk(void* TScene,void* pathForDeps,void* OutPtr) {
+	Scene* sc = (Scene*)TScene;
+	std::string* path = (std::string*)(pathForDeps);
+	sc->FixRecursivePropDeps(path,OutPtr);
+}
+void Scene::FixRecursivePropDeps(void* CallerStruct,void* ptr) {
+	void(*func)(void*, void*, void*) = Scene::SceneThunk;
+	Serialization::CallerObject* data = (Serialization::CallerObject*)CallerStruct;
+	std::string* path = (std::string*)data->Data;
+	int off = path->find(":");
+	int objectnum = std::stoi(path->substr(1, off-1));
+	int closing = path->find(">");
+	std::string classname = path->substr(off + 1, closing-3);
+	//if properties belong to same object but created only linking pending
+	//if properties belong to same object but not yet created
+	//if properties belong to other object not yet created
+	std::vector<Objects*> copyOfall(AllObject);
+	std::sort(copyOfall.begin(), copyOfall.end(),
+		[](const Objects* a, const Objects* b) {
+		return a->Id < b->Id; 
+	});
+	auto it = std::lower_bound(copyOfall.begin(), copyOfall.end(), objectnum,
+		[](const Objects* obj,int value) {
+		return value < obj->Id;
+	});
+	//if the object already exist in list
+	//if the object is being made it is not in list 
+	//should only go when the object property need other object property which is already exist
+	if (it != copyOfall.end() && (*it)->Id == objectnum) {
+		Objects* foundObj = *it;
+		bool found = false;
+		for (auto& it : *foundObj->GetProperties()) {
+			if (it->GetPropertyClassName() == classname) {
+				RefrencePassing ref((void*)it, it->GetPropertyType());
+				ptr = (void*)&ref;
+				found = true;
+				break;
+			}
+		}
+	}
+	// we need to create new object or property exist in same object
+	else {
+		//object want property from same object
+		if (data->callerId == objectnum) {
+			//make properties and
+			//look for property if it exist bind it
+			for (auto& it : *foundObj->GetProperties()) {
+				if (it->GetPropertyClassName() == classname) {
+					RefrencePassing ref((void*)it, it->GetPropertyType());
+					ptr = (void*)&ref;
+					found = true;
+					break;
+				}
+			}
+
+			//recursivly fix its dependency
+			//this should only reach when property is in same object but not initalized yet?
+			for (int i = 0; i < ObjectsBlocks->size(); i++) {
+				if ((*ObjectsBlocks)[i].Id == objectnum) {
+					auto OB = &(*ObjectsBlocks)[i];
+					for (auto& it : OB->propBlocks) {
+						if (it.PropertyNames == classname) {
+							Serialization::DeSerializeObject(foundObj, it, func, this);
+							break;
+						}
+					}
+					it = it + i;
+					break;
+				}
+			}
+			for (auto& it : *foundObj->GetProperties()) {
+				if (it->GetPropertyClassName() == classname) {
+					RefrencePassing ref((void*)it, it->GetPropertyType());
+					ptr = (void*)&ref;
+					found = true;
+					break;
+				}
+			}
+			return;
+		}
+
+		else {
+			///////////////////////////////////
+			Serialization::ObjectBlocks* OB = nullptr;
+			auto it = ObjectsBlocks->begin();
+			for (int i = 0; i < ObjectsBlocks->size(); i++) {
+				if ((*ObjectsBlocks)[i].Id == objectnum) {
+					OB = &(*ObjectsBlocks)[i];
+					it = it + i;
+					break;
+				}
+			}
+			if (OB != nullptr) {
+				Objects* o = ParseObject(*OB);
+				ObjectsBlocks->erase(it);
+				if (o != nullptr)
+					AllObject.push_back(o);
+
+				//Made new Object should be fine
+				for (auto& it : *o->GetProperties()) {
+					if (it->GetPropertyClassName() == classname) {
+						RefrencePassing ref((void*)it, it->GetPropertyType());
+						ptr = (void*)&ref;
+						break;
+					}
+				}
+			}
+		}
+	}
+}
 void Scene::LoadSkyBox() {
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
@@ -196,6 +309,7 @@ short Scene::GetCurrentID() {
 	return globalID;
 }
 Objects* Scene::ParseObject(Serialization::ObjectBlocks OB) {
+	void(*func)(void*, void*, void*) = Scene::SceneThunk;
 	if (OB.ClassName == "Prefab") {
 		std::istringstream stream(OB.blockBuffer);
 		std::string line;
@@ -210,6 +324,7 @@ Objects* Scene::ParseObject(Serialization::ObjectBlocks OB) {
 		GetFile(ptf->Path);
 		std::vector<Vertex> v;
 		std::vector<unsigned int> indi;
+
 		for (unsigned int i = 0; i < Vertexformated.size(); i++) {
 			v.emplace_back(Vertexformated[i]);
 			indi.push_back(i);
@@ -225,28 +340,34 @@ Objects* Scene::ParseObject(Serialization::ObjectBlocks OB) {
 		}
 		Prefab* newPrefab = new Prefab(*newMesh,ObjectID );
 		for (auto& it : OB.propBlocks) {
-			Serialization::DeSerializeObject(newPrefab,it);
+			Serialization::DeSerializeObject(newPrefab,it,func,this);
 		}
 		dynamic_cast<Primitives::Material*>(newPrefab->ObjProperties[1])->CreateCBuffer(0, sizeof(CB::PerObjectData), Primitives::DOMAIN_SHADER);
 		Triangles.push_back(newPrefab);
+		//Change this to AddObject(newPrefab);
 		return newPrefab;
 	}
 	if (OB.ClassName == "NObject") {
 		NullObject* no = new NullObject(Scene::GetCurrentID());
 		for (auto& it : OB.propBlocks) {
-			Serialization::DeSerializeObject(no, it);
+			Serialization::DeSerializeObject(no, it,func,this);
 		}
 		AddObject(no, false);
 	}
+	
 	return nullptr;
 }
 void Scene::LoadScene() {
-	std::vector<Serialization::ObjectBlocks> ObjectsBlocks = Serialization::ReadFromFile();
-	for (auto& it : ObjectsBlocks) {
-		Objects* o = ParseObject(it);
-		if(o!=nullptr)
-		AllObject.push_back(o);
+	auto localBlock = Serialization::ReadFromFile();
+	ObjectsBlocks = &localBlock;
+	for (auto it = ObjectsBlocks->begin(); it != ObjectsBlocks->end(); ) {
+		Objects* o = ParseObject(*it);
+		if (o != nullptr)
+			AllObject.push_back(o);
+		it = ObjectsBlocks->erase(it); 
 	}
+	ObjectsBlocks->clear();
+	ObjectsBlocks = nullptr;
 }
 void Scene::SaveScene() {
 	std::string buffer;

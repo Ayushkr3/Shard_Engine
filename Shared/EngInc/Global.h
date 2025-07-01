@@ -16,21 +16,13 @@
 #include <DirectXMath.h>
 #include <d3d11.h>
 #include <wrl.h>
+#include <iomanip>
 #pragma warning(disable : 4244)
 static std::string WorkingDirectory = "D:\\program\\Eng";
 struct ObjectProperties;
 struct TransformStruct;
 inline ImGuiContext* Globalctx = nullptr;
-#define REFLECT_BEGIN(CLASS_NAME) \
-    auto reflect() { \
-        using ThisClass = CLASS_NAME; \
-        return std::tuple(
-#define REFLECT_VAR(VAR) \
-    std::make_pair(Serial(#VAR,(void*)&VAR,typeid(VAR)), ThisClass::VAR)
 
-#define REFLECT_END() \
-        ); \
-    }
 #define REFLECT_BEGIN_ADDR(CLASS_NAME) \
     auto reflect_addr() { \
         using ThisClass = CLASS_NAME; \
@@ -44,6 +36,18 @@ inline ImGuiContext* Globalctx = nullptr;
     }
 class Objects {
 public:
+	bool operator<(const Objects& other)const {
+		return Id < other.Id;
+	}
+	bool operator>(const Objects& other)const {
+		return Id > other.Id;
+	}
+	bool operator==(const Objects& other)const {
+		return Id == other.Id;
+	}
+	bool operator==(const int id)const {
+		return Id == id;
+	}
 	virtual void Highlight() {}; // If item is selected then do stuff
 	virtual void Restore() {}; //If item is unselected restore previous state
 	inline static std::vector<short> GlobalIdPool;
@@ -67,6 +71,8 @@ public:
 	virtual void inPlayMode() {};
 	virtual void InitializePlayMode() {};
 	virtual void DeInitializePlayMode() {};
+	//Only use this when want to query properties multiple time otherwise its just O(n)
+	virtual std::unordered_map<std::string, ObjectProperties*> GetPropertiesQuick();
 
 };
 struct ObjectProperties {
@@ -84,8 +90,16 @@ struct ObjectProperties {
 	virtual void UpdateDependency(const void*& ptr) {};
 	virtual ObjectProperties* GetPropertyRef() = 0;
 	virtual const std::type_info& GetPropertyType() = 0;
-	virtual std::string Serialize() { return ""; };
-	virtual void DeSerialize(std::string block) {};
+	virtual std::string Serialize() { 
+		std::ostringstream bytes;
+		std::string s;
+		s = s + "{/" + GetPropertyClassName() + "}" + "\n";
+		bytes << std::setw(5) << std::setfill('0') << (s.size());
+		std::string buffer = "{" + GetPropertyClassName() + ":" + bytes.str() + "}" + "\n";
+		s = buffer + s;
+		return s; 
+	};
+	virtual void DeSerialize(std::string block,void* FixPropFunctor,void* Scene) {};
 	virtual std::string GetPropertyClassName() = 0;
 };
 struct TransformStruct :public ObjectProperties {
@@ -147,6 +161,8 @@ struct RefrencePassing {
 	void* ObjectPtr;
 	const std::type_info& id;
 	RefrencePassing(void* ObjectPtr,const std::type_info& id) :ObjectPtr(ObjectPtr),id(id){};
+	RefrencePassing():id(typeid(nullptr)){};
+	RefrencePassing(const RefrencePassing& ref) :ObjectPtr(ref.ObjectPtr),id(ref.id) {};
 };
 struct PathToFile {
 	std::string Path;

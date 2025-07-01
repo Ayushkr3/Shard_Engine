@@ -6,6 +6,7 @@
 #include "Maths.h"
 #include <memory>
 #include <sstream>
+#include "Serialization.h"
 extern "C" PHYSICS_API void SharedVarInit(float*&dT, bool*& inPlayMode);
 //#include <DirectXMath.h>
 //#include <deque>
@@ -62,6 +63,12 @@ public:
 		bool isAffectedbyGravity = true;
 		bool isStaticObject = false;
 		TransformStruct* trans;
+		REFLECT_BEGIN(RigidBody)
+			REFLECT_VAR(isAffectedbyGravity),
+			REFLECT_VAR(isStaticObject),
+			REFLECT_PTR(trans)
+		REFLECT_END()
+		PHYSICS_API void DeSerialize(std::string block, void* FixPropFunctor, void* Scene);
 		PHYSICS_API void InitPlayMode();
 		PHYSICS_API void DeInitPlayMode();
 		PHYSICS_API static void RegisterFactory(std::multimap<std::string, std::function<ObjectProperties*(Objects*)>>& GlobalPropertiesPoolL = ObjectProperties::GlobalPropertiesPool);
@@ -76,6 +83,7 @@ public:
 		PHYSICS_API physx::PxActor* GetCurrentActor();
 		PHYSICS_API const std::type_info& GetPropertyType();
 		PHYSICS_API std::string GetPropertyClassName() { return "RigidBody"; }
+		PHYSICS_API std::string Serialize();
 	};
 	class BaseCollider{
 	protected:
@@ -90,6 +98,10 @@ public:
 	public:
 		class BoxCollider :public ObjectProperties, public BaseCollider {
 		public:
+			REFLECT_BEGIN(BoxCollider)
+				REFLECT_PTR(shape),
+				REFLECT_PTR(rb)
+			REFLECT_END()
 			PHYSICS_API const std::type_info& GetPropertyType();
 			PHYSICS_API ObjectProperties* GetPropertyRef();
 			PHYSICS_API static void RegisterFactory(std::multimap<std::string, std::function<ObjectProperties*(Objects*)>>& GlobalPropertiesPoolL = ObjectProperties::GlobalPropertiesPool);
@@ -98,7 +110,9 @@ public:
 			PHYSICS_API void show();
 			PHYSICS_API void UpdateDependency(const void* ptr);
 			PHYSICS_API BoxCollider(Objects* obj);
-			PHYSICS_API std::string GetPropertyClassName() { return "Collider"; }
+			PHYSICS_API std::string GetPropertyClassName() { return "Box Collider"; }
+			PHYSICS_API std::string Serialize();
+			void DeSerialize(std::string block, void* FixPropFunctor, void* Scene);
 		};
 		class PlaneCollider :public ObjectProperties, public BaseCollider {
 		public:
@@ -110,7 +124,7 @@ public:
 			PHYSICS_API void show();
 			PHYSICS_API void UpdateDependency(const void* ptr);
 			PHYSICS_API PlaneCollider(Objects* obj);
-			PHYSICS_API std::string GetPropertyClassName() { return "Collider"; }
+			PHYSICS_API std::string GetPropertyClassName() { return "Plane Collider"; }
 		};
 	};
 };

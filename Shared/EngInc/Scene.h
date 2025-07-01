@@ -15,6 +15,14 @@ private:
 	std::unique_ptr<SkyBox> pSkyBox;
 	void LoadSkyBox();
 	Camera::DebugCamera dc;
+	/*@first param-Internal
+	/ @second param-Input
+	/ @third param output*/
+	CORE_EXP static void SceneThunk(void* TScene,void* pathForDeps,void* ptr);
+	CORE_EXP void FixRecursivePropDeps(void* CallerStruct,void* ptr);
+	//when object scene being loaded get the whole list
+	//clear whole list after scene loaded
+	static std::vector<Serialization::ObjectBlocks>* ObjectsBlocks;
 public:
 	CORE_EXP void SaveScene();
 	CORE_EXP void LoadScene();

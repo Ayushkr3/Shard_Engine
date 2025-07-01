@@ -252,6 +252,30 @@ void NVPhysx::Collider::PlaneCollider::show()
 
 	}
 }
+std::string NVPhysx::Collider::BoxCollider::Serialize() {
+	return Serialization::SerializeProperty(*this);
+}
+void NVPhysx::Collider::BoxCollider::DeSerialize(std::string block, void* FixPropFunctor, void* Scene) {
+	std::istringstream iss(block);
+	std::string line;
+	std::getline(iss, line);
+	while (std::getline(iss, line)) {
+		size_t off = line.find(":");
+		std::string type = line.substr(0, off);
+		switch (std::stoi(type))
+		{
+		case 0:
+			off = line.find(":", off + 1);
+			std::string enclosed = line.substr(off + 1, line.size() - 2);
+			if (enclosed.front() == '<' && enclosed.back() == '>') {
+				//call functor with this
+				void(*func)(void*,void*) = (void(*)(void*,void*))(FixPropFunctor);
+				func(Scene,(void*)&Serialization::CallerObject(associatedObj->Id,(void*)&enclosed));
+			}
+			break;
+		}
+	}
+}
 void NVPhysx::Collider::PlaneCollider::UpdateDependency(const void * ptr)
 {
 	RefrencePassing* ref = (RefrencePassing*)(ptr);
