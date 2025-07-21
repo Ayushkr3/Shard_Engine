@@ -50,6 +50,7 @@ public:
 	bool isMoving;
 	CORE_EXP virtual void Draw();
 	CORE_EXP void UpdateBuffers();
+	CORE_EXP void UpdateSubResource();
 	CORE_EXP void inPlayMode();
 	CB::PerObjectData Transformation;
 	CORE_EXP bool operator<(const Prefab& secondObj)const;

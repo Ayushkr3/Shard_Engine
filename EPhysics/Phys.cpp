@@ -194,8 +194,16 @@ void NVPhysx::RigidBody::show() {
 		if (ImGui::BeginDragDropTarget()) {
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Transform")) {
 				UpdateDependency(payload->Data);
-				ImGui::EndDragDropTarget();
 			}
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Objects")) {
+				RefrencePassing* ref = (RefrencePassing*)payload->Data;
+				RefrencePassing ref2(nullptr, typeid(TransformStruct));
+				ObjectProperties::UpdateDependency((void*)ref, (void*)&ref2);
+				if (ref2.ObjectPtr != nullptr) {
+					UpdateDependency(&ref2);
+				}
+			}
+			ImGui::EndDragDropTarget();
 		}
 		if (ImGui::Checkbox("Affected by Gravity", &isAffectedbyGravity)) {
 			if (*Globals::inPlayMode) {
@@ -268,25 +276,39 @@ void NVPhysx::RigidBody::DeSerialize(std::string block, void* FixPropFunctor, vo
 	std::string line;
 	std::getline(iss, line);
 	while (std::getline(iss, line)) {
+		if (line == "{/RigidBody}")break;
 		size_t off = line.find(":");
 		std::string type = line.substr(0, off);
+		off = line.find(":", off + 1);
+		std::string val = line.substr(off + 1);
 		switch (std::stoi(type))
 		{
-		case 0:
+		case 0:{
+			int v = std::stoi(val);
+			isAffectedbyGravity = v;
 			break;
-		case 1:
+			}
+		case 1: {
+			int v = std::stoi(val);
+			isStaticObject = v;
+			break;
+		}
 			break;
 		case 2:
-			off = line.find(":", off + 1);
+			//off = line.find(":", off + 1);
 			std::string enclosed = line.substr(off + 1, line.size() - 2);
 			if (enclosed.front() == '<' && enclosed.back() == '>') {
 				//call functor with this
-				void(*func)(void*, void*) = (void(*)(void*, void*))(FixPropFunctor);
-				func(Scene, (void*)&Serialization::CallerObject(associatedObj->Id, (void*)&enclosed));
+				void* ref = nullptr;
+				void(*func)(void*, void*,void*) = (void(*)(void*, void*,void*))(FixPropFunctor);
+				func(Scene, (void*)&Serialization::CallerObject(associatedObj->Id, (void*)&enclosed),&ref);
+				UpdateDependency(ref);
 			}
 			break;
 		}
 	}
+	//Put this in end of all deserialization logic
+	associatedObj->GetProperties()->push_back(this);
 }
 
 //-------------------------------------------------------------------------------//

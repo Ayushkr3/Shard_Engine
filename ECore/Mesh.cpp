@@ -144,6 +144,9 @@ void Prefab::UpdateBuffers() {
 		dynamic_cast<Primitives::Material*>(ObjProperties[1])->ds.BindAssociatedBuffer((void*)&Transformation, 0, pContext.Get());
 	}
 }
+void Prefab::UpdateSubResource() {
+	dynamic_cast<Primitives::Material*>(ObjProperties[1])->ds.BindAssociatedBuffer((void*)&Transformation, 0, pContext.Get());
+}
 void Prefab::inPlayMode() {
 	Trans->Update();
 	for (auto& o : ObjProperties) {
@@ -234,7 +237,10 @@ bool Prefab::Moving() {
 		(Inheritence.AbsoluteTrans->position[2]-(Trans->position[2] + (Inheritence.InheritedTrans)->position[2] )!=0)|
 		(Inheritence.AbsoluteTrans->rotation[0]-(Trans->rotation[0] + (Inheritence.InheritedTrans)->rotation[0] )!=0)|
 		(Inheritence.AbsoluteTrans->rotation[1]-(Trans->rotation[1] + (Inheritence.InheritedTrans)->rotation[1] )!=0)|
-		(Inheritence.AbsoluteTrans->rotation[2]-(Trans->rotation[2] + (Inheritence.InheritedTrans)->rotation[2])!=0));
+		(Inheritence.AbsoluteTrans->rotation[2]-(Trans->rotation[2] + (Inheritence.InheritedTrans)->rotation[2])!=0)|
+		(Inheritence.AbsoluteTrans->Scale[0] - (Trans->Scale[0] + (Inheritence.InheritedTrans)->Scale[0]) != 0) |
+		(Inheritence.AbsoluteTrans->Scale[1] - (Trans->Scale[1] + (Inheritence.InheritedTrans)->Scale[1]) != 0) |
+		(Inheritence.AbsoluteTrans->Scale[2] - (Trans->Scale[2] + (Inheritence.InheritedTrans)->Scale[2]) != 0));
 }
 void NullObject::inPlayMode() {
 	Inheritence.AbsoluteTrans->position[0] = t->position[0] + (Inheritence.InheritedTrans)->position[0];

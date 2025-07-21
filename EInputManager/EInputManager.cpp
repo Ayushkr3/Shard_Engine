@@ -20,17 +20,23 @@ void InputManager::Read(LPARAM lparam) {
 	GetRawInputData((HRAWINPUT)lparam,RID_INPUT,lpbyte,&cbSize, sizeof(RAWINPUTHEADER));
 
 	RAWINPUT* raw = (RAWINPUT*)lpbyte;
-	if (raw->header.dwType == RIM_TYPEKEYBOARD) {
+	/*if (raw->header.dwType == RIM_TYPEKEYBOARD) {
 		kb.Read(raw);
-	}
+	}*/
+	//kb.Read(raw);
 	if (raw->header.dwType == RIM_TYPEMOUSE) {
 		Ms.Read(raw);
 	}
 }
-
+void InputManager::Update() {
+	kb.Read();
+}
 char InputManager::GetLastKeyPress()
 {
 	return kb.keyPressed;
+}
+std::unique_ptr<DirectX::Keyboard::KeyboardStateTracker>& InputManager::GetKeyboardState() {
+	return kb.state;
 }
 void InputManager::IPC(Mouse* Ms, Keyboard* kb) {
 	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, NULL, sizeof(InputDevices), L"IP");

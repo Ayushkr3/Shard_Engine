@@ -246,8 +246,16 @@ void NVPhysx::Collider::PlaneCollider::show()
 		if (ImGui::BeginDragDropTarget()) {
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RigidBody")) {
 				UpdateDependency((void*)payload->Data);
-				ImGui::EndDragDropTarget();
 			}
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("Objects")) {
+				RefrencePassing* ref = (RefrencePassing*)payload->Data;
+				RefrencePassing ref2(nullptr, typeid(RigidBody));
+				ObjectProperties::UpdateDependency((void*)ref, (void*)&ref2);
+				if (ref2.ObjectPtr != nullptr) {
+					UpdateDependency(&ref2);
+				}
+			}
+			ImGui::EndDragDropTarget();
 		}
 
 	}
@@ -260,6 +268,7 @@ void NVPhysx::Collider::BoxCollider::DeSerialize(std::string block, void* FixPro
 	std::string line;
 	std::getline(iss, line);
 	while (std::getline(iss, line)) {
+		if (line == "{/Box Collider}")break;
 		size_t off = line.find(":");
 		std::string type = line.substr(0, off);
 		switch (std::stoi(type))
@@ -269,12 +278,15 @@ void NVPhysx::Collider::BoxCollider::DeSerialize(std::string block, void* FixPro
 			std::string enclosed = line.substr(off + 1, line.size() - 2);
 			if (enclosed.front() == '<' && enclosed.back() == '>') {
 				//call functor with this
-				void(*func)(void*,void*) = (void(*)(void*,void*))(FixPropFunctor);
-				func(Scene,(void*)&Serialization::CallerObject(associatedObj->Id,(void*)&enclosed));
+				void* ref = nullptr;
+				void(*func)(void*, void*, void*) = (void(*)(void*, void*, void*))(FixPropFunctor);
+				func(Scene,(void*)&Serialization::CallerObject(associatedObj->Id,(void*)&enclosed),&ref);
+				UpdateDependency(ref);
 			}
 			break;
 		}
 	}
+	associatedObj->GetProperties()->push_back(this);
 }
 void NVPhysx::Collider::PlaneCollider::UpdateDependency(const void * ptr)
 {

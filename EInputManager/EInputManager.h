@@ -26,4 +26,6 @@ public:
 	INPUT_API static void ClientDeInit();
 	INPUT_API static const InputDevices* GetInputDevices();
 	INPUT_API static void DeInit();
+	INPUT_API static void Update();
+	INPUT_API static std::unique_ptr<DirectX::Keyboard::KeyboardStateTracker>& GetKeyboardState();
 };

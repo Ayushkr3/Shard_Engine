@@ -1,5 +1,6 @@
 #pragma once
 #include <Windows.h>
+#include "dxtkInc/Mouse.h"
 #include "MACROS.h"
 class Mouse {
 public:

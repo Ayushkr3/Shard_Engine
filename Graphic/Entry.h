@@ -4,8 +4,9 @@
 #include "timer.h"
 #include <string>
 #include "Metrices.h"
-
+#include "EInputManager.h"
 void DoFrame(window* Skeleton) {
+	InputManager::Update();
 	Metrice::MetriceTimeMark();
 	Globals::dT = &Metrice::deltaTime;
 	float color[4] = {0.0,0.0,0.0,1.0 };

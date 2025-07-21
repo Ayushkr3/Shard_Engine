@@ -52,12 +52,8 @@ Objects::Objects(short id, std::string ObjName) :Id(id), ObjName(ObjName) {
 	(Inheritence.AbsoluteTrans)->position[2] = 0;
 };
 Objects::~Objects() {
-	if (this->Inheritence.inheritedFrom == nullptr) {
-		delete this->Inheritence.AbsoluteTrans;
-		delete this->Inheritence.InheritedTrans;
-	}
 	this->RemoveHeritence();
-	delete this->Inheritence.InheritedTrans;
+	//delete this->Inheritence.InheritedTrans;
 }
 DirectX::XMFLOAT4 TransformStruct::EulerToQuat(float yaw,float pitch,float roll) {
 	yaw = DirectX::XMConvertToRadians(yaw);
@@ -147,7 +143,6 @@ void TransformStruct::Update() {
 void Objects::SetInheritence(Objects*& o) {
 	if (this->Inheritence.inheritedFrom == o)
 		return; //already inherited by object
-	delete this->Inheritence.InheritedTrans;
 	this->Inheritence.InheritedTrans = o->Inheritence.AbsoluteTrans;
 	this->Inheritence.inheritedFrom = o;
 	TransformStruct* b = nullptr;
@@ -157,20 +152,48 @@ void Objects::SetInheritence(Objects*& o) {
 		}
 	}
 	o->Inheritence.InheritedObj.push_back(this);
-	b->position[0] = b->position[0] - o->Inheritence.AbsoluteTrans->position[0];
-	b->position[1] = b->position[1] - o->Inheritence.AbsoluteTrans->position[1];
-	b->position[2] = b->position[2] - o->Inheritence.AbsoluteTrans->position[2];
+	if (b != nullptr) {
+		b->position[0] = b->position[0] - o->Inheritence.AbsoluteTrans->position[0];
+		b->position[1] = b->position[1] - o->Inheritence.AbsoluteTrans->position[1];
+		b->position[2] = b->position[2] - o->Inheritence.AbsoluteTrans->position[2];
+	}
+}
+void ObjectProperties::UpdateDependency(const void* ptr,void* Destptr) {
+	RefrencePassing* ref = (RefrencePassing*)ptr;
+	Objects* obj = static_cast<Objects*>(ref->ObjectPtr);
+	RefrencePassing* Dest = (RefrencePassing*)Destptr;
+	for (auto& prop : *(obj->GetProperties())) {
+		if (prop->GetPropertyType() == Dest->id) {
+			Dest->ObjectPtr = prop;
+			break;
+		}
+	}
+}
+void Objects::DeleteInheritence() {
+	for (auto it = this->Inheritence.InheritedObj.begin(); it != this->Inheritence.InheritedObj.end(); ++it) {
+		(*it)->Inheritence.inheritedFrom = nullptr;
+	}
 }
 void Objects::RemoveHeritence(){
 	if (this->Inheritence.inheritedFrom != nullptr) {
 		for (auto it = this->Inheritence.inheritedFrom->Inheritence.InheritedObj.begin(); it != this->Inheritence.inheritedFrom->Inheritence.InheritedObj.end(); ++it) {
 			if (*it == this) {
+				
 				this->Inheritence.inheritedFrom->Inheritence.InheritedObj.erase(it);
 				break;
 			}
 		}
 	}
-	this->Inheritence.InheritedTrans = new TransformStruct(nullptr);
+	if (!this->Inheritence.InheritedTrans) {
+		this->Inheritence.InheritedTrans = nullptr;
+		this->Inheritence.InheritedTrans = new TransformStruct(nullptr);
+	}
+	if (this->Inheritence.AbsoluteTrans) {
+		//delete this->Inheritence.AbsoluteTrans;
+		this->Inheritence.AbsoluteTrans = nullptr;
+		
+	}
+	//this->Inheritence.InheritedObj.clear();
 	this->Inheritence.inheritedFrom = nullptr;
 }
 std::string GetMemAddress(void* ptr) {

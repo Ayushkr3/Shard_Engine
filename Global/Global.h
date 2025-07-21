@@ -23,6 +23,8 @@ struct ObjectProperties;
 struct TransformStruct;
 inline ImGuiContext* Globalctx = nullptr;
 
+#define RECURSIVE_SERIALIZATION_CALL(functor,pp_to_ref)void(*func)(void*, void*, void*) = (void(*)(void*, void*, void*))(functor);func(Scene, (void*)&Serialization::CallerObject(associatedObj->Id, (void*)&enclosed), pp_to_ref);
+
 #define REFLECT_BEGIN_ADDR(CLASS_NAME) \
     auto reflect_addr() { \
         using ThisClass = CLASS_NAME; \
@@ -66,6 +68,7 @@ public:
 	std::string SerializationName;
 	void SetInheritence(Objects*& o);
 	void RemoveHeritence();
+	void DeleteInheritence();
 	virtual std::vector<ObjectProperties*>* GetProperties() = 0;
 	virtual std::string Serialize() { return ""; };
 	virtual void inPlayMode() {};
@@ -88,6 +91,7 @@ struct ObjectProperties {
 	//Called everyframe in playmode
 	virtual void inPlayMode() {};
 	virtual void UpdateDependency(const void*& ptr) {};
+	void UpdateDependency(const void* ptr,void* Destptr);
 	virtual ObjectProperties* GetPropertyRef() = 0;
 	virtual const std::type_info& GetPropertyType() = 0;
 	virtual std::string Serialize() { 

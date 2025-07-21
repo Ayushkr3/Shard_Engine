@@ -23,6 +23,12 @@ struct Serial {
         ); \
     }
 namespace Serialization {
+	struct MetaDataBlock {
+		//Only purpose of this to keep a structred method of saving meta data of scene
+		//aka just to remember what i was saving
+		short LastGlobalID;
+		std::vector<short> LeftOverIds;
+	};
 	struct PropertyBlock {
 		std::string PropertyNames;
 		std::string PropertyBuffer;
@@ -33,6 +39,7 @@ namespace Serialization {
 		std::string blockBuffer;
 		short Id;
 		std::vector<PropertyBlock> propBlocks;
+		short InheritedId = -1;
 		ObjectBlocks(short Id,std::string classname,std::string blockBuffer):ClassName(classname),blockBuffer(blockBuffer),Id(Id){}
 	};
 	struct CallerObject {
@@ -119,11 +126,13 @@ namespace Serialization {
 			ObjectProperties* prop = x[i];
 			buffer += prop->Serialize();
 		}
+		std::string inheritedData = std::string("-1:InheritedF:") + "<"+ ((Obj.Inheritence.inheritedFrom)?std::to_string(Obj.Inheritence.inheritedFrom->Id) : "null") + ">" + "\n";
 		std::ostringstream bytes;
-		bytes << std::setw(5) << std::setfill('0') << (buffer.size() + Obj.ObjName.size() + 3+Obj.Serialize().size());
+		bytes << std::setw(5) << std::setfill('0') << (buffer.size() + Obj.ObjName.size() + 3+Obj.Serialize().size()+inheritedData.size());
 		std::ostringstream index;
 		index << std::setw(3) << std::setfill('0') <<Obj.Id;
 		s = s + "\n"+"[" + Obj.SerializationName +":"+index.str()+":" + bytes.str() + "]\n";
+		s = s + inheritedData;
 		if (Obj.Serialize() != "")
 			s = s + Obj.Serialize();
 		s = s + buffer;
@@ -132,4 +141,6 @@ namespace Serialization {
 	}
 	std::vector<ObjectBlocks> ReadFromFile();
 	void SaveToFile(std::string buffer);
+	void SaveMetaData(MetaDataBlock MB);
+	MetaDataBlock LoadMetaData();
 }
