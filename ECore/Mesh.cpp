@@ -192,7 +192,11 @@ std::vector<ObjectProperties*>* Prefab::GetProperties() {
 }
 Prefab::~Prefab() {
 	//delete Mat;
-	delete Trans;
+	auto vec = *GetProperties();
+	for (auto& it : vec) {
+		delete it;
+		it = nullptr;
+	}
 }
 
 std::vector<ObjectProperties*>* Mesh::GetProperties() {
@@ -229,7 +233,11 @@ std::vector<ObjectProperties*>* NullObject::GetProperties() {
 	return &objProp;
 }
 NullObject::~NullObject() {
-	delete t;
+	auto vec = *(GetProperties());
+	for (auto& it : vec) {
+		delete it;
+		it = nullptr;
+	}
 }
 bool Prefab::Moving() {
 	return ((Inheritence.AbsoluteTrans->position[0]-(Trans->position[0] + (Inheritence.InheritedTrans)->position[0])!=0)|

@@ -186,10 +186,18 @@ void SceneManager::RecursiveTree(Objects*& obj,int* selected) {
 	else {
    		std::string selectableLabel = obj->ObjName + std::to_string(obj->Id);
 		if(ImGui::TreeNodeEx(selectableLabel.c_str()/*,selected == obj->Id ? ImGuiTreeNodeFlags_Selected : 0*/)) {
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+			/*if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
 				PropertiesWindow::Obj = obj;
 				PropertiesWindow::closable = true;
 				*selected = obj->Id;
+			}*/
+			if ((ImGui::IsItemToggledOpen()) && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+				PropertiesWindow::Obj = obj;
+				PropertiesWindow::closable = true;
+				*selected = obj->Id;
+			}
+			else {
+
 			}
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
 				ImGui::SetDragDropPayload("Objects", &obj, sizeof(obj));
@@ -497,6 +505,7 @@ void ControlMenu::Content() {
 	}
 	ImGui::SameLine();
 	if (ImGui::Button(ICON_FA_REPEAT"Load Scene")) {
+		PropertiesWindow::Obj = nullptr;
 		SceneManager::currentScene->LoadScene();
 	}
 	ImGui::SameLine();

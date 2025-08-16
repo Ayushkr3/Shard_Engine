@@ -51,6 +51,7 @@ Objects::Objects(short id, std::string ObjName) :Id(id), ObjName(ObjName) {
 	(Inheritence.AbsoluteTrans)->position[1] = 0;
 	(Inheritence.AbsoluteTrans)->position[2] = 0;
 };
+
 Objects::~Objects() {
 	this->RemoveHeritence();
 	//delete this->Inheritence.InheritedTrans;
@@ -195,6 +196,16 @@ void Objects::RemoveHeritence(){
 	}
 	//this->Inheritence.InheritedObj.clear();
 	this->Inheritence.inheritedFrom = nullptr;
+}
+bool Objects::DeleteProperty(ObjectProperties* Property) {
+	auto vec = *(this->GetProperties());
+	for (auto it = vec.begin(); it != vec.end();it++) {
+		if (*it == Property) {
+			vec.erase(it);
+			return true;
+		}
+	}
+	return false;
 }
 std::string GetMemAddress(void* ptr) {
 	std::ostringstream oss; oss << ptr; return oss.str().substr(oss.str().size()-7, 7);

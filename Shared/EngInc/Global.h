@@ -62,7 +62,6 @@ public:
 	}Inheritence;
 	Objects(Objects & O);
 	Objects(short id, std::string ObjName);
-	~Objects();
 	short Id;
 	std::string ObjName;
 	std::string SerializationName;
@@ -76,7 +75,9 @@ public:
 	virtual void DeInitializePlayMode() {};
 	//Only use this when want to query properties multiple time otherwise its just O(n)
 	virtual std::unordered_map<std::string, ObjectProperties*> GetPropertiesQuick();
-
+	//Only removes from list does not free memory
+	virtual bool DeleteProperty(ObjectProperties* Property);
+	virtual ~Objects();
 };
 struct ObjectProperties {
 	static void PushToObjectPropertyPool(std::string name,std::function<ObjectProperties*(Objects*)> f, std::multimap<std::string, std::function<ObjectProperties*(Objects*)>>& GlobalPropertiesPoolL);
