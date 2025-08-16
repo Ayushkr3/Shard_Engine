@@ -117,7 +117,7 @@ xcopy /y /d  "$(OutDir)EPhysics.lib" "$(SolutionDir)EngineDependency" </Command>
       <PreprocessorDefinitions>API_EXPORT;_DEBUG;EPHYSICS_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>D:\program\vs\graphic\Shared\EngInc\NVPhysx;D:\program\vs\graphic\Shared;D:\program\vs\graphic\Shared\EngInc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared\EngInc\NVPhysx;$(SolutionDir)Shared;$(SolutionDir)Shared\EngInc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
@@ -125,7 +125,7 @@ xcopy /y /d  "$(OutDir)EPhysics.lib" "$(SolutionDir)EngineDependency" </Command>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>D:\program\vs\graphic\EngineDependency\Physx;D:\program\vs\graphic\Shared\lib;D:\program\vs\graphic\EngineDependency;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)EngineDependency\Physx;$(SolutionDir)Shared\lib;$(SolutionDir)EngineDependency;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>Global.lib;ImGui.lib;LowLevel_static_64.lib;LowLevelAABB_static_64.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;PhysXPvdSDK_static_64.lib;PhysXTask_static_64.lib;PhysXVehicle_static_64.lib;SampleBase_static_64.lib;SampleFramework_static_64.lib;SamplesToolkit_static_64.lib;SceneQuery_static_64.lib;SimulationController_static_64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>

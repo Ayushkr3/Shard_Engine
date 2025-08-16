@@ -48,13 +48,7 @@
     <ClInclude Include="ConstantBuff.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Light.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Metrices.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ColliderController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ECoreUI.h">
@@ -92,16 +86,10 @@
     <ClCompile Include="ConstantBuff.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Light.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Metrices.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ColliderController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ECoreUI.cpp">
@@ -137,6 +125,12 @@
       <Filter>Shaders\Default</Filter>
     </FxCompile>
     <FxCompile Include="DSSkyBox.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="UIVs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="UIPs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

@@ -15,12 +15,7 @@ Camera::Camera(Microsoft::WRL::ComPtr<ID3D11Device> pDevice) : Objects(++Objects
 		XMVectorSet(PosNrot->postion[0], PosNrot->postion[1], PosNrot->postion[2], 1.0f),
 		XMVectorSet(focus[0], focus[1], focus[2], 1.0f),
 		XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-#ifdef ImGUI_ENABLED
 	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.0f), 1.7777777777f, 0.1f, 100.0f);
-#else
-	projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(60.0f), 1.33333333f, 0.1f, 100.0f);
-#endif // ImGUI_ENABLED
-
 	viewXprojection.viewMat = CB::ConvertMatrixToFloat4x4(viewmatrix * projection);
 
 	D3D11_BUFFER_DESC CbuffDesc;

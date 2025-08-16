@@ -140,9 +140,9 @@ namespace Primitives {
 		static ID3D11DeviceContext* pIContext; //Internal Context
 		//---------------------------------------------------------------------//
 	private:
-		static ImGuiContext* privateCtx;
 		std::unique_ptr<ConstantBuffer> pCB;
 	public:
+		static ImGuiContext* privateCtx;
 		PRIMITVE_API void CreateCBuffer(short index, size_t size, SHADER_CONSTANT_BUFFER_TYPE shadertype);
 		PRIMITVE_API static void SetImguiCtx(ImGuiContext* Ctx);
 		VertexShader vs;

@@ -2,7 +2,6 @@
 #include "Phys.h"
 #include "Primitives.h"
 #include "Global.h"
-#include "ColorUpdater.h"
 #include <wrl.h>
 #include <d3d11.h>
 class ObjectPropertiesFactory {

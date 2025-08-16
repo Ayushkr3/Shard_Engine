@@ -20,7 +20,12 @@ public:
 	CORE_EXP void InitializePlayMode();
 	CORE_EXP void DeInitializePlayMode();
 };
-class Mesh :public Objects {
+class Renderable {
+public:
+	CORE_EXP virtual void Draw() {};
+	CORE_EXP virtual void UpdateBuffers() {};
+};
+class Mesh :public Objects,public Renderable {
 public:
 	PathToFile* objectPath;
 	std::vector<ObjectProperties*> ObjProperties;
@@ -36,7 +41,7 @@ public:
 	CORE_EXP Mesh(Microsoft::WRL::ComPtr<ID3D11Device>& pDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext>& pContext,short id,std::vector<Vertex> vertice, std::vector<unsigned int> indi,PathToFile* ptf);
 	CORE_EXP std::vector<ObjectProperties*>* GetProperties();
 };
-class Prefab :public Objects
+class Prefab :public Objects, public Renderable
 {
 private:
 	bool Moving();
@@ -48,7 +53,7 @@ public:
 	CORE_EXP Prefab(Mesh& mesh, short ObjectId);
 	CORE_EXP ~Prefab();
 	bool isMoving;
-	CORE_EXP virtual void Draw();
+	CORE_EXP void Draw();
 	CORE_EXP void UpdateBuffers();
 	CORE_EXP void UpdateSubResource();
 	CORE_EXP void inPlayMode();

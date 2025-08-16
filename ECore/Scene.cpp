@@ -2,7 +2,7 @@
 #include "Scene.h"
 #include "Shapes.h"
 #include "ObjParser.h"
-//#pragma comment(lib, "D:/program/vs/graphic/Shared/lib/ECore.lib")
+#include "EUI.h"
 short Scene::currentOBJID = 10;
 using namespace physx;
 std::vector<short> Scene::globalCurrentOBJID = {};
@@ -29,12 +29,13 @@ void Scene::Render() {
 	cam.calculateProjection(pContext, &(cam.GetViewMatrix()));
 	//TODO: Fix proper lighting
 	pSkyBox->Draw();
-	for (auto& Triangle : Triangles) {
-		Triangle->UpdateBuffers();
-		Triangle->Draw();
-#ifndef WIREFRAME_ENABLED
+	for (auto& obj : AllObject) {
 		
-#endif // !WIREFRAME_ENABLED
+		if (dynamic_cast<Renderable*>(obj) != nullptr) {
+			Renderable* red = dynamic_cast<Renderable*>(obj);
+			red->UpdateBuffers();
+			red->Draw();
+		}
 	}
 }
 void Scene::RenderWireFrame() {
